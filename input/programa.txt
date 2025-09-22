@@ -1,0 +1,9 @@
+float x=0,y=1,z=2;
+
+int main () {
+  if (blabla) {
+    x =1
+  } else {
+    x =2;
+  }
+}
