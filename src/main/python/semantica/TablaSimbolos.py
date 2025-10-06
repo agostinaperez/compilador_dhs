@@ -1,4 +1,4 @@
-from main.python.semantica.Contexto import Contexto
+from semantica.Contexto import Contexto
 
 class TablaSimbolos:
     _instance = None
