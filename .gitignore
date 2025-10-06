@@ -1,0 +1,9 @@
+src/main/python/compiladoresLexer.py
+src/main/python/compiladoresParser.py
+src/main/python/compiladoresVisitor.py
+src/main/python/compiladoresListener.py
+src/main/python/compiladoresLexer.py
+src/main/python/compiladoresLexer.tokens
+src/main/python/compiladoresLexer.interp
+src/main/python/compiladores.interp
+src/main/python/compiladores.tokens
