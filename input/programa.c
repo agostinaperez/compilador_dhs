@@ -5,6 +5,7 @@ int suma (int a, int b) {
 int main() {
     int x = 5, y= 10;
     int z;
+    z = 0;
 
     z = x + y;
     z = z - 2;

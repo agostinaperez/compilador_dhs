@@ -2,9 +2,7 @@ from copy import copy
 from compiladoresListener import compiladoresListener
 from compiladoresParser import compiladoresParser
 from semantica.TablaSimbolos import TablaSimbolos
-from semantica.Id import Id, Variable, Funcion
-
-
+from semantica.Id import Variable, Funcion
 class Escucha(compiladoresListener):
     tabla = TablaSimbolos()
     listTdato = []
@@ -53,6 +51,11 @@ class Escucha(compiladoresListener):
             return
         for var in contexto.getSimbolos(): #recorro las variables del contexto actual y busco la q estoy asignando
             if var == ctx.getChild(0).getText():
+                #pedirlke a la tabla de simbolos el objeto con este id y de ahí saco el tió de dato independientemente dek contexto
+                if self.tabla.buscar(var) != var.tdato:
+                    print('Error: la variable ' + var +
+                          ' no es del tipo esperado')
+                    return
                 varActualizada = Variable( #vuelvo a guardar la variable con el mismo nombre y tipo de dato pero inicializada en true
                     contexto.getSimbolos()[var].nombre, contexto.getSimbolos()[var].tdato, True)
                 self.tabla.actualizar(varActualizada)
@@ -93,3 +96,160 @@ class Escucha(compiladoresListener):
             nuevoArg = Variable(nombre, tdato)
             self.listArgs.append(nuevoArg)
             self.exitLista_args(ctx.getChild(3))
+            
+            
+     # def exitLista_var(self, ctx: compiladoresParser.Lista_varContext):
+    #     if ctx.getChildCount() != 0:
+    #         if self.tabla.buscarLocal(ctx.getChild(1).getText()) == False:
+    #             # como el Listener recorre el arbol de abajo hacia arriba, obtengo el tipo
+    #             # de dato subiendo el contexto hacia la declaracion
+    #             if len(self.listTdato) == 0:
+    #                 auxCtx = ctx
+    #                 while (auxCtx.parentCtx.getChild(0).getText() == ','):
+    #                     auxCtx = auxCtx.parentCtx
+    #                 self.listTdato.append(
+    #                     auxCtx.parentCtx.getChild(0).getText())
+
+    #             tdato = self.listTdato.pop()
+    #             self.listTdato.append(tdato)
+    #             name = str(ctx.getChild(1).getText())
+    #             nuevaVar = Variable(name, tdato)
+    #             # again, si hay un child(2) es pq la variable se inicializo
+    #             if (str(ctx.getChild(2).getText()) != ''):
+    #                 nuevaVar.setInicializado()
+    #         else:
+    #             print("Variable " + ctx.getChild(1).getText() +
+    #                   " existente en el contexto")
+    #             return
+    #         self.tabla.agregar(nuevaVar)
+    #         print('Nuevo simbolo: ' + nuevaVar.nombre + ' agregado')
+
+    #         self.listTdato.pop()
+
+    #     return
+    
+     # def exitCall_funcion(self, ctx: compiladoresParser.Call_funcionContext):
+    #     contexto = self.tabla.buscar(ctx.getChild(0).getText()) #busco la funcion en la tabla de simbolos tipo q la haya definido!
+
+    #     if contexto == False:
+    #         print('FUNCION INEXISTENTE')
+    #         return
+
+    #     newFuncion = Funcion('', '', []) #sin nombre ni tipo de dato ni argumentos
+    #     for var in contexto.getSimbolos().values():
+    #         if var.nombre == ctx.getChild(0).getText():
+    #             newFuncion = var
+    #             break
+
+    #     self.exitSend_args(ctx.getChild(2))
+
+    #     if len(newFuncion.args) != len(self.listArgs):
+    #         print('Faltan parametros en la llamada de funcion')
+    #         return
+
+    #     for var1, var2 in zip(newFuncion.args, self.listArgs):
+    #         if var1.tdato != var2.tdato:
+    #             print('Error: el parametro ' + var2 +
+    #                   ' no es del tipo esperado')
+    #             return
+    
+    
+     # def exitFuncion(self, ctx: compiladoresParser.FuncionContext):
+    #     self.listArgs.clear()
+
+    #     tdato = ctx.getChild(0).getText()
+    #     nombre = ctx.getChild(1).getText()
+    #     self.exitArgs(ctx.getChild(3))
+    #     listaArgs = copy.deepcopy(self.listArgs)
+    #     funcionVar = Funcion(nombre, tdato, listaArgs)
+    #     funcionVar.setAccedido()
+
+    #     contexto = self.tabla.buscar(nombre)
+
+    #     # Si no existio prototipo de la funcion, se agrega a la tabla de simbolos
+    #     if contexto == False:
+    #         self.tabla.agregar(funcionVar)
+    #         print('Nuevo simbolo ' + funcionVar.nombre + ' agregado')
+    #         return
+
+    #     # Si existe prototipo, verifico que la implementacion se corresponda
+    #     for var in contexto.getSimbolos().values():
+    #         if var.nombre == funcionVar.nombre:
+    #             if var.tdato == funcionVar.tdato:
+    #                 for arg1, arg2 in zip(var.args, funcionVar.args):
+    #                     # En caso que el prototipo tenga nombre en el argumento
+    #                     if arg1.nombre != '':
+    #                         if arg1.nombre == arg2.nombre:
+    #                             if arg1.tdato == arg2.tdato:
+    #                                 pass
+    #                             else:
+    #                                 print(
+    #                                     'LA IMPLEMENTACION DE ' + funcionVar.nombre + ' NO SE CORRESPONDE CON EL PROTOTIPO')
+    #                                 return
+    #                         else:
+    #                             print(
+    #                                 'LA IMPLEMENTACION DE ' + funcionVar.nombre + ' NO SE CORRESPONDE CON EL PROTOTIPO')
+    #                             return
+    #                 print('La implementacion de ' + funcionVar.nombre +
+    #                       ' se corresponde con su prototipo')
+    #                 return
+
+    #     print(
+    #         'LA IMPLEMENTACION DE ' + funcionVar.nombre + ' NO SE CORRESPONDE CON EL PROTOTIPO')
+    #     return
+
+#para cuando llamo a una funcion y le paso parametros
+    # def exitSend_args(self, ctx: compiladoresParser.Send_argsContext):
+    #     self.listArgs.clear()
+    #     if ctx.getChildCount() == 0:
+    #         return
+
+    #     nombre = str()
+    #     if ctx.getChild(0).getChild(0).getChild(0).getChildCount == 2:
+    #         nombre = ctx.getChild(0).getChild(
+    #             0).getChild(0).getChild(1).getText()
+    #     elif ctx.getChild(0).getChild(0).getChild(0).getChild(0).getChildCount() == 0:
+    #         nombre = ctx.getChild(0).getChild(
+    #             0).getChild(0).getChild(0).getText()
+
+    #     contexto = self.tabla.buscar(nombre)
+
+    #     if contexto == False:
+    #         print('PARAMETRO ' + nombre + ' NO DEFINIDO')
+    #         return
+
+    #     for var in contexto.getSimbolos().values():
+    #         if var.nombre == nombre:
+    #             self.listArgs.append(var)
+
+    #     self.exitLista_send_args(ctx.getChild(1))
+
+    #     return
+
+    # def exitLista_send_args(self, ctx: compiladoresParser.Lista_send_argsContext):
+    #     if ctx.getChildCount() == 0:
+    #         return
+
+    #     nombre = str()
+    #     if ctx.getChild(1).getChild(0).getChild(0).getChildCount == 2:
+    #         nombre = ctx.getChild(1).getChild(
+    #             0).getChild(0).getChild(1).getText()
+    #     elif ctx.getChild(1).getChild(0).getChild(0).getChild(0).getChildCount() == 0:
+    #         nombre = ctx.getChild(1).getChild(
+    #             0).getChild(0).getChild(0).getText()
+
+    #     contexto = self.tabla.buscar(nombre)
+
+    #     if contexto == False:
+    #         print('PARAMETRO ' + nombre + ' NO DEFINIDO')
+    #         return
+
+    #     for var in contexto.getSimbolos().values():
+    #         if var.nombre == nombre:
+    #             self.listArgs.append(var)
+    #             break
+
+    #     if ctx.getChild(2).getChildCount() != 0:
+    #         self.exitLista_send_args(ctx.getChild(1))
+
+    #     return

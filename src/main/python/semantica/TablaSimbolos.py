@@ -40,5 +40,5 @@ class TablaSimbolos:
     def buscar(self, nombre) -> Contexto:
         for context in TablaSimbolos._ctx[::-1]:
             if nombre in context.getSimbolos():
-                return context
+                return TablaSimbolos._ctx[-1].getSimbolos()[nombre]
         return False
