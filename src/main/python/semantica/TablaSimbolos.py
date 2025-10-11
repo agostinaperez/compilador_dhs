@@ -40,5 +40,11 @@ class TablaSimbolos:
     def buscar(self, nombre) -> Contexto:
         for context in TablaSimbolos._ctx[::-1]:
             if nombre in context.getSimbolos():
-                return TablaSimbolos._ctx[-1].getSimbolos()[nombre]
+                return context
         return False
+        
+    def imprimirContextos(self):
+        print("\n--- Contextos actuales ---")
+        for i, ctx in enumerate(TablaSimbolos._ctx):
+            print(f"Contexto {i}: {[v for v in ctx.getSimbolos().keys()]}")
+        print("--------------------------\n")

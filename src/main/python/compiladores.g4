@@ -86,7 +86,6 @@ operador: EQQ | NE | GT | LT | GE | LE;
 declaracion: tipo ID definicion lista_var;
 
 lista_var: COMA ID definicion lista_var
-          | COMA definicion lista_var
           | ;
 
 definicion: EQ oplo |;
