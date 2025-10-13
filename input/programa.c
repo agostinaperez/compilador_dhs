@@ -1,4 +1,12 @@
 int suma (int a, int b) {
+
+    for (int i = 0; i < 5; i = i + 1) {
+        a = a + i;
+    }
+
+    if (a>b) {
+        a = a + 1;
+    }
     return a + b;
 }
 
@@ -7,13 +15,8 @@ int main() {
     int z;
     z = 0;
 
-    z = x + y;
-    z = z - 2;
-    z = z * 3;
     z = z / 2;
     z = z % 4;
-
-    z = x << 2;
     z = y >> 1;
 
     int mayor = (x > y) ? x : y;
@@ -28,9 +31,6 @@ int main() {
         x = x + 1;
     }
 
-    for (int i = 0; i < 5; i = i + 1) {
-        z = z + i;
-    }
 
     z = suma(x, y);
 

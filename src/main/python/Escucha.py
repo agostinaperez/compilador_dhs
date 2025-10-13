@@ -8,6 +8,7 @@ class Escucha(compiladoresListener):
     listTdato = []
     listArgs = []
     isFuncion = 0
+    indent = 1
 
     def enterPrograma(self, ctx: compiladoresParser.ProgramaContext):
         print("Comenzando la compilacion".center(40, "*") + '\n')
@@ -30,23 +31,34 @@ class Escucha(compiladoresListener):
                 listaArgs = copy.deepcopy(self.listArgs)
                 for var in listaArgs:
                     self.tabla.agregar(var)
+                print(" "*self.indent + "<<< Entrando a un bloque de funcion >>>")
+                self.indent+=2
+            else:
+                print(" "*self.indent+"<<< Entrando a un " + tipo + " >>>")
+                self.indent+=2
 
-        print(">>> Entrando bloque")
-        self.tabla.imprimirContextos()
+#        self.tabla.imprimirContextos()
 
     def exitBloque(self, ctx: compiladoresParser.BloqueContext):
         padre = ctx.parentCtx
-        if padre and padre.getChildCount() >= 4:
+        if padre:
             tipo = padre.getChild(0).getText()
-            if tipo in ('int', 'double'):
-                # No borrar aún el contexto de función — lo hace el parser al salir de la función
-                print("<<< Saliendo de bloque de función (no borro contexto todavía)")
-                self.tabla.imprimirContextos()
-                return
-
-        # Si no es una función (if, for, etc.), borro el contexto
-        print("<<< Saliendo bloque interno")
-        self.tabla.imprimirContextos()
+            if padre.getChildCount() >= 4:
+                if tipo in ('int', 'double'):
+                    self.indent-=2
+                    # No borrar aún el contexto de función — lo hace el parser al salir de la función
+                    print(" "*self.indent+"<<< Saliendo de bloque de función (no borro contexto todavía) >>>")
+#                   self.tabla.imprimirContextos()
+                    return
+                if tipo in ('for', 'if', 'while'):
+                    self.indent-=2
+                    # Si no es una función (if, for, etc.), borro el contexto
+                    print(" "*self.indent+"<<< Saliendo de bloque " + tipo + " >>>")
+                    
+            else:
+                self.indent-=2
+                print(" "*self.indent+"<<< Saliendo de bloque interno >>>")            
+#        self.tabla.imprimirContextos()
         self.tabla.borrarContexto()
 
     def exitDeclaracion(self, ctx: compiladoresParser.DeclaracionContext):
@@ -82,7 +94,7 @@ class Escucha(compiladoresListener):
             else:
                 # si es llamado a funcion, se actualiza cuando se comprueba que los tipos de datos son iguales (variable y retorno)
                 self.tabla.agregar(nuevaVar)
-                print('Nuevo simbolo: ' + nuevaVar.nombre + ' agregado')
+                print(" "*self.indent+'Nuevo simbolo: ' + nuevaVar.nombre + ' agregado')
                 self.listTdato.append(nuevaVar.nombre)
                 self.listTdato.append(nuevaVar.tdato)
                 self.isFuncion = 1
@@ -90,11 +102,11 @@ class Escucha(compiladoresListener):
                     0).getChild(0).getChild(0).getChild(0).getChild(0).getChild(0).getChild(0))
                 return
         else:
-            print("Variable " + ctx.getChild(1).getText() +
+            print(" "*self.indent+"Variable " + ctx.getChild(1).getText() +
                   " existente en el contexto")
             return
         self.tabla.agregar(nuevaVar)
-        print('Nuevo simbolo: ' + nuevaVar.nombre + ' agregado')
+        print(" "*self.indent+'Nuevo simbolo: ' + nuevaVar.nombre + ' agregado')
 
         self.listTdato.pop() #borro el tipo de dato de la lista pq ya la agregue a la tabla
 
@@ -121,11 +133,11 @@ class Escucha(compiladoresListener):
                 if (str(ctx.getChild(2).getText()) != ''):
                     nuevaVar.setInicializado()
             else:
-                print("Variable " + ctx.getChild(1).getText() +
+                print(" "*self.indent+"Variable " + ctx.getChild(1).getText() +
                       " existente en el contexto")
                 return
             self.tabla.agregar(nuevaVar)
-            print('Nuevo simbolo: ' + nuevaVar.nombre + ' agregado')
+            print(" "*self.indent+'Nuevo simbolo: ' + nuevaVar.nombre + ' agregado')
 
             self.listTdato.pop()
 
@@ -137,7 +149,7 @@ class Escucha(compiladoresListener):
         contexto = self.tabla.buscar(nombre_var)
 
         if not contexto:
-            print(f'LA VARIABLE {nombre_var} NO ESTÁ DEFINIDA')
+            print(" "*self.indent+"LA VARIABLE"+ nombre_var + "NO ESTÁ DEFINIDA")
             return
 
         var_destino = None
@@ -175,7 +187,7 @@ class Escucha(compiladoresListener):
         # Si no es función, actualizo la variable normalmente
         varActualizada = Variable(var_destino.nombre, var_destino.tdato, True)
         self.tabla.actualizar(varActualizada)
-        print(f'Variable {varActualizada.nombre} actualizada con expresión normal')
+        print(" "*self.indent+"Variable " +varActualizada.nombre + " actualizada con expresión normal")
 
 
     def exitCall_funcion(self, ctx: compiladoresParser.Call_funcionContext):
@@ -183,25 +195,25 @@ class Escucha(compiladoresListener):
         contexto = self.tabla.buscar(ctx.getChild(0).getText())
         
         if contexto == False:
-            print('FUNCION INEXISTENTE')
+            print(" "*self.indent+"FUNCION INEXISTENTE")
             return
 
         if self.isFuncion == 1:
-
+#acá es como q creo una variable var q no desaparece cuando salgo el for
             for var in contexto.getSimbolos().values():
                 if var.nombre == ctx.getChild(0).getText():
                     break
             #guardo los valores en var auxiliares y los borro de la pila
             tdato = self.listTdato.pop()
             nombre = self.listTdato.pop()
-
             if var.tdato == tdato:
-                print('La asignacion de: ' + nombre
+                print(" "*self.indent+'La asignacion de: ' + nombre
                       + ' es posible')
                 varActualizada = Variable(nombre, tdato, True)
                 self.tabla.actualizar(varActualizada)
+                print(" "*self.indent+"Variable " + nombre + " actualizada mediante funcion " + var.nombre)
             else:
-                print('La asignacion de: ' +
+                print(" "*self.indent+'La asignacion de: ' +
                       nombre + ' no es posible: Error de tipo de dato')
 
             self.isFuncion = 0
@@ -216,13 +228,13 @@ class Escucha(compiladoresListener):
         self.exitSend_args(ctx.getChild(2))
 
         if len(funcionVar.args) != len(self.listArgs):
-            print('Faltan parametros en la llamada de funcion')
+            print(" "*self.indent+'Faltan parametros en la llamada de funcion')
             return
 
         for var1, var2 in zip(funcionVar.args, self.listArgs):
 
             if var1.tdato != var2.tdato:
-                print('Error: el parametro ' + var2 +
+                print(" "*self.indent+'Error: el parametro ' + var2 +
                       ' no es del tipo esperado')
                 return
 
@@ -237,9 +249,9 @@ class Escucha(compiladoresListener):
             listaArgs = copy.deepcopy(self.listArgs)
             nuevaFuncion = Funcion(nombre, tdato, listaArgs)
             self.tabla.agregar(nuevaFuncion)
-            print('Nuevo simbolo ' + nuevaFuncion.nombre + ' agregado')
+            print(" "*self.indent+'Nuevo simbolo ' + nuevaFuncion.nombre + ' agregado')
         else:
-            print('SIMBOLO YA DEFINIDO')
+            print(" "*self.indent+'SIMBOLO YA DEFINIDO')
 
     def exitFuncion(self, ctx: compiladoresParser.FuncionContext):
         self.listArgs.clear()
@@ -256,7 +268,7 @@ class Escucha(compiladoresListener):
         # Si no existio prototipo de la funcion, se agrega a la tabla de simbolos
         if contexto == False:
             self.tabla.agregar(funcionVar)
-            print('Nuevo simbolo: ' + funcionVar.nombre + ' agregado')
+            print(" "*self.indent+'Nuevo simbolo: ' + funcionVar.nombre + ' agregado')
             return
 
         # Si existe prototipo, verifico que la implementacion se corresponda
@@ -270,18 +282,18 @@ class Escucha(compiladoresListener):
                                 if arg1.tdato == arg2.tdato:
                                     pass
                                 else:
-                                    print(
+                                    print(" "*self.indent+
                                         'LA IMPLEMENTACION DE ' + funcionVar.nombre + ' NO SE CORRESPONDE CON EL PROTOTIPO')
                                     return
                             else:
-                                print(
+                                print(" "*self.indent+
                                     'LA IMPLEMENTACION DE ' + funcionVar.nombre + ' NO SE CORRESPONDE CON EL PROTOTIPO')
                                 return
-                    print('La implementacion de ' + funcionVar.nombre +
+                    print(" "*self.indent+'La implementacion de ' + funcionVar.nombre +
                           ' se corresponde con su prototipo')
                     return
 
-        print(
+        print(" "*self.indent+
             'LA IMPLEMENTACION DE ' + funcionVar.nombre + ' NO SE CORRESPONDE CON EL PROTOTIPO')
         return
 
@@ -314,7 +326,7 @@ class Escucha(compiladoresListener):
             contexto = self.tabla.buscar(nombre)
 
             if contexto == False:
-                print('SIMBOLO ' + nombre + ' NO DEFINIDO')
+                print(" "*self.indent+'SIMBOLO ' + nombre + ' NO DEFINIDO')
                 return
 
             for var in contexto.getSimbolos().values():
@@ -327,11 +339,11 @@ class Escucha(compiladoresListener):
                 var = Variable(nombre, 'int')
 
         if var.tdato == funcionCtx.getChild(0).getText():
-            print('El tipo de dato retornado por ' +
+            print(" "*self.indent+'El tipo de dato retornado por ' +
                   funcionCtx.getChild(1).getText() + ' es correcto')
 
         else:
-            print('El tipo de dato retornado por ' +
+            print(" "*self.indent+'El tipo de dato retornado por ' +
                   funcionCtx.getChild(1).getText() + ' no es correcto')
 
     def exitArgs(self, ctx: compiladoresParser.ArgsContext):
@@ -371,7 +383,7 @@ class Escucha(compiladoresListener):
             contexto = self.tabla.buscar(nombre)
 
             if contexto == False:
-                print('PARAMETRO ' + nombre + ' NO DEFINIDO')
+                print(" "*self.indent+'PARAMETRO ' + nombre + ' NO DEFINIDO')
                 return
 
             for var in contexto.getSimbolos().values():
@@ -407,7 +419,7 @@ class Escucha(compiladoresListener):
             contexto = self.tabla.buscar(nombre)
 
             if contexto == False:
-                print('PARAMETRO ' + nombre + ' NO DEFINIDO')
+                print(" "*self.indent+'PARAMETRO ' + nombre + ' NO DEFINIDO')
                 return
 
             for var in contexto.getSimbolos().values():
@@ -428,3 +440,11 @@ class Escucha(compiladoresListener):
             self.exitLista_send_args(ctx.getChild(1))
 
         return
+    
+    def enterI_while(self, ctx:compiladoresParser.I_whileContext):
+        print(" "*self.indent + "<<< Entrando a un bloque while >>>")
+        self.indent+=2
+    
+    def enterI_for(self, ctx:compiladoresParser.I_forContext):
+        print(" "*self.indent + "<<< Entrando a un bloque for >>>")
+        self.indent+=2
